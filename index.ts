@@ -1,14 +1,16 @@
 import * as express from 'express';
-import * as path from 'path';
+import { resolve } from "path";
 import * as glob from 'glob';
 
 // Initialize the app
 var app = express();
 
 // assign all of the routes to express
-glob.sync('./routes/*/index.js').forEach(function(file){
-    app.use(require(file));
+glob.sync('./js/routes/*/index.js').forEach(function(file){
+    app.use(require(resolve(file)));
 });
 
-app.listen(3000 || process.env.PORT);
-console.log('Running at localhost:' + 3000);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Running at localhost:${port}`);
+});
