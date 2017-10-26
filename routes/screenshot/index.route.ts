@@ -36,4 +36,3 @@ function screenshot(req: Request, res: Response){
 }
 
 module.exports = Router().get('/screenshot', screenshot);
-
