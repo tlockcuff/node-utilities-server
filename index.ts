@@ -17,11 +17,11 @@ glob.sync('./js/routes/**/index.route.js').forEach(function(file){
     const route = app.route(route_path)
     // if the module exported any specific functions, add them to the route.
     const path_obj = { route: route_path, methods: [] }
-    if(get) { route.get(get); console.log("get"); path_obj.methods.push("get") } 
-    if(put) { route.put(put); console.log("put"); path_obj.methods.push("put") } 
-    if(post) { route.post(post); console.log("post"); path_obj.methods.push("post") } 
-    if(del) { route.delete(del); console.log("del"); path_obj.methods.push("del") } 
-    if(all) { route.all(all); console.log("all"); path_obj.methods.push("all") } 
+    if(get) { route.get(get); path_obj.methods.push("get") } 
+    if(put) { route.put(put); path_obj.methods.push("put") } 
+    if(post) { route.post(post); path_obj.methods.push("post") } 
+    if(del) { route.delete(del); path_obj.methods.push("del") } 
+    if(all) { route.all(all); path_obj.methods.push("all") } 
     paths.push(path_obj)
 });
 
