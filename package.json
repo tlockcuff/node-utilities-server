@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "express": "^4.16.2",
+    "express-validator": "^4.2.1",
     "glob": "^7.1.2",
     "puppeteer": "^0.12.0"
   },

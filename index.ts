@@ -1,9 +1,11 @@
 import * as express from 'express';
 import { resolve } from "path";
 import * as glob from 'glob';
+import * as expressValidator from 'express-validator';
 
 // Initialize the app
 var app = express();
+app.use(expressValidator());
 
 let paths = []
 
