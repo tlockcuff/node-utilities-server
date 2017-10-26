@@ -4,19 +4,19 @@ import {resolve, join} from 'path';
 import * as fs from 'fs';
 import { parse } from "url"
 
+
 const screenshotPath = resolve('./temp/screenshots/');
 
-function screenshot(req: Request, res: Response){
+export function get(req: Request, res: Response) {
+
+    req.checkQuery('url').exists()
+    if (req.validationErrors()) { res.status(400).json({ errors: req.validationErrors() }); return; }
+
     var url = req.query.url;
     var height = (req.query.h) ? parseInt(req.query.w) : 1200;
     var width = (req.query.w) ? parseInt(req.query.w) : 1920;
 
-    let opts = {
-        headers: {
-            "Content-Disposition": "inline; "
-        }
-    }
-
+    let opts = { headers: { "Content-Disposition": "inline; " } };
     const parsedUrl = parse(url)
 
     puppeteer.launch().then(function(browser){
@@ -34,5 +34,3 @@ function screenshot(req: Request, res: Response){
         });
     });
 }
-
-module.exports = Router().get('/screenshot', screenshot);
