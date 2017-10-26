@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 const screenshotPath = resolve('./temp/screenshots/');
 
-function screenshot(req: Request, res: Response){
+export function all(req: Request, res: Response){
     var url = req.query.url;
     var height = (req.query.h) ? parseInt(req.query.w) : 1200;
     var width = (req.query.w) ? parseInt(req.query.w) : 1920;
@@ -23,6 +23,3 @@ function screenshot(req: Request, res: Response){
         });
     });
 }
-
-module.exports = Router().get('/screenshot', screenshot);
-
