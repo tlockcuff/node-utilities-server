@@ -1,10 +1,15 @@
 import * as express from 'express';
 import { resolve } from "path";
 import * as glob from 'glob';
+import {Server, createServer} from "http"
 import * as expressValidator from 'express-validator';
+import IO from "./routes/testing/IO";
 
 // Initialize the app
 var app = express();
+const server = createServer(app);
+IO.Setup(server)
+
 app.use(expressValidator());
 
 let paths = []
@@ -33,6 +38,8 @@ app.use('/help', (req, res, next) => {
 })
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Running at localhost:${port}`);
-});
+server.listen(port);
+console.log(`Running at localhost:${port}`)
+// app.listen(port, () => {
+//     console.log(`Running at localhost:${port}`);
+// });
