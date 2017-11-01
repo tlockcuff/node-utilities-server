@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <form id="tests-form" action="http://localhost:3000/testing" enctype="multipart/form-data" method="post">
+        <input type="file" name="tests" id="test-files">
+        <input type="submit" value="Upload">
+    </form>
+    <script>
+        
+        var socket = io("http://localhost:3000/test-suite")
+
+        socket.emit('test', { uuid: "sjdjwkakd" })
+
+        socket.on('ready', function() {
+        })
+    </script>
+</body>
+</html>
