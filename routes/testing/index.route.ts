@@ -22,7 +22,6 @@ const testUploader = multer({
     fileFilter: (req, file, cb) => {
         let file_go_through = true
         if (!/(zip)|(octect-stream)/.test(file.mimetype)) { file_go_through = false }
-        if (!/.zip$/.test(file.originalname)) { file_go_through = false }
 
         cb((file_go_through) ? null : new Error("File must be a zip archive"), file_go_through)
     }
