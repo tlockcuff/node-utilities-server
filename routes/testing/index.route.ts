@@ -1,13 +1,15 @@
 import { Request, Response } from "express"
 import Socket from "./IO"
+import { resolve } from "path"
 import * as multer from "multer"
 import * as v4 from "uuid/v4"
+import * as AdmZip from "adm-zip"
+import { spawn } from "child_process"
 
 const testUploader = multer({
     storage: multer.diskStorage({
         filename: (req, file, cb) => {
-            console.log(req.file)
-            cb(null, v4()+".zip")
+            cb(null, v4() + ".zip")
         },
         destination: (req, file, cb) => {
             cb(null, './temp/tests')
@@ -22,20 +24,31 @@ const testUploader = multer({
     }
 }).single("tests")
 
-// Socket.rooms.TestingSuite.on('connection', (socket) => {
-//     socket.on('test', function(data) {
-//         console.log(data)
-//         this.emit('ready')
-//     })
-//     socket.on('file_send', (data) => {
-//         console.log(`got a request for file-sending ${data}`)
-//     })
-// })
-
 export function post(req: Request, res: Response) {
-    console.log("uploading.")
-    testUploader(req, res, function(err) {
-        if(err) { throw err }
+    testUploader(req, res, function (error) {
+        if (error) { res.json(error) }
         res.json({ uuid: req.file.filename.replace(/\.zip$/, '') })
     })
 }
+
+Socket.rooms.TestingSuite.on('connection', (socket) => {
+    socket.on('test', async function ({ uuid }) {
+        this.emit('status', 'extracting')
+        const path = resolve(`./temp/tests/${uuid}`)
+        const zip = new AdmZip(`${path}.zip`)
+        zip.extractAllToAsync(path, true, (err) => {
+            this.emit('status', 'extracted')
+            console.log(`spawning child process with '${path}'`)
+            // const proc = spawn("node", ["./js/routes/testing/runner.js", path])
+            console.log(`tests are looking for ${path}/**/*.spec.{ts,js}`)
+            // const proc = spawn("./node_modules/.bin/mocha", ["--reporter json-stream", `./temp/tests/${uuid}/**/*.spec.{ts,js}`, '--require ts-node/register'], { cwd: __dirname })
+            const proc = spawn('ls', ['-l']).on('error', (proc_error) => { console.log(proc_error) })
+            this.emit('status', 'running tests. . .')
+            proc.stdout.setEncoding("utf-8")
+            proc.stdout.on('data', (d) => {
+                console.log(d)
+                this.emit('result', d)
+            })
+        })
+    })
+})

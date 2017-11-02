@@ -5,21 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.2/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.0/axios.min.js"></script>
     <title>Document</title>
 </head>
 <body>
-    <form id="tests-form" action="http://localhost:3000/testing" enctype="multipart/form-data" method="post">
-        <input type="file" name="tests" id="test-files">
-        <input type="submit" value="Upload">
-    </form>
+    <div id="app">
+        <form @submit="uploadFile">
+            <input type="file" name="zip" id="zip">
+            <input type="submit" value="Send">
+        </form>
+        <p v-show="status">{{status}}</p>
+        <p v-show="file_status">{{file_status}}</p>
+        <p v-show="error">{{error}}</p>
+        <button @click="runTests" v-show="readyToRun">Run tests</button>
+        <div class="tests">
+            <p v-for="res in results">{{res | json}}</p>
+        </div>
+    </div>
     <script>
-        
         var socket = io("http://localhost:3000/test-suite")
 
-        socket.emit('test', { uuid: "sjdjwkakd" })
+        socket.on
+        new Vue({
+            el: "#app",
+            data: {
+                status: "waiting. . .",
+                file_status: null,
+                readyToRun: false,
+                results: [],
+                error: null,
+                uuid: null
+            },
+            methods: {
+                uploadFile: function(e) {
+                    e.preventDefault();
+                    var formData = new FormData()
+                    var file = e.target.zip.files[0]
+                    formData.set('tests', file)
+                    axios.post("http://localhost:3000/testing", formData)
+                        .then(function(res) {
+                            if(res.data.uuid) {
+                                this.uuid = res.data.uuid
+                                this.status = "posted file, uuid: " + res.data.uuid
+                                this.readyToRun = true
+                                
 
-        socket.on('ready', function() {
+                                
+                            } else if(res.data.error) {
+                                this.error = res.data.error
+                            }
+                        }.bind(this))
+                },
+
+                runTests: function() {
+                    socket.emit('test', { uuid: this.uuid })
+                    socket.on('status', function(status) {
+                        this.file_status = status
+                    }.bind(this))
+                    socket.on('result', function(r) { this.results.push(r) }.bind(this))
+                }
+            }
         })
+        
+
+        // socket.emit('test', { uuid: "sjdjwkakd" })
+
+        // socket.on('ready', function() {
+        // })
     </script>
 </body>
 </html>
