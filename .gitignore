@@ -11,3 +11,7 @@ yarn-error.log
 
 # Git conventions
 !.gitkeep
+
+# Not Temporary Folders
+!temp/screenshots/.gitkeep
+!temp/tests/.gitkeep
