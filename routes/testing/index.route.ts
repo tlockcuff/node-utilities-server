@@ -5,6 +5,9 @@ import * as multer from "multer"
 import * as v4 from "uuid/v4"
 import * as AdmZip from "adm-zip"
 import { spawn } from "child_process"
+import * as tmp from "tmp"
+
+let TEMP_DIR: string;
 
 const testUploader = multer({
     storage: multer.diskStorage({
@@ -31,6 +34,16 @@ export function post(req: Request, res: Response) {
     })
 }
 
+export async function init() {
+    // make temporary tests folder
+    const tmpObj = tmp.dirSync({
+        dir: resolve('./temp')
+    })
+    TEMP_DIR = tmpObj.name
+    tmpObj.removeCallback()
+    console.log(`making test folder in ${TEMP_DIR}`)
+}
+
 Socket.rooms.TestingSuite.on('connection', (socket) => {
     socket.on('test', async function ({ uuid }) {
         this.emit('status', 'extracting')
@@ -39,15 +52,20 @@ Socket.rooms.TestingSuite.on('connection', (socket) => {
         zip.extractAllToAsync(path, true, (err) => {
             this.emit('status', 'extracted')
             console.log(`spawning child process with '${path}'`)
-            // const proc = spawn("node", ["./js/routes/testing/runner.js", path])
             console.log(`tests are looking for ${path}/**/*.spec.{ts,js}`)
-            // const proc = spawn("./node_modules/.bin/mocha", ["--reporter json-stream", `./temp/tests/${uuid}/**/*.spec.{ts,js}`, '--require ts-node/register'], { cwd: __dirname })
-            const proc = spawn('ls', ['-l']).on('error', (proc_error) => { console.log(proc_error) })
+            const mocha_path = resolve('./node_modules/.bin/mocha.cmd')
+            const spec_path = resolve(`${path}/**/*.spec.{ts,js}`)
             this.emit('status', 'running tests. . .')
+            const proc = spawn(mocha_path, ['--reporter', 'json-stream', '--require', 'ts-node/register', spec_path], { cwd: resolve('.') })
+            proc.stderr.pipe(process.stderr)
             proc.stdout.setEncoding("utf-8")
             proc.stdout.on('data', (d) => {
-                console.log(d)
                 this.emit('result', d)
+            })
+            proc.on('close', (code, sig) => {
+                // code returns the number of failures instead of an exit code.
+                this.emit('done', code)
+                console.log(`mocha is finished. code: ${code}, SIG: ${sig}`)
             })
         })
     })

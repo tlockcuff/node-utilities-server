@@ -59,11 +59,18 @@
                 },
 
                 runTests: function() {
+                    this.results = []
                     socket.emit('test', { uuid: this.uuid })
                     socket.on('status', function(status) {
                         this.file_status = status
                     }.bind(this))
                     socket.on('result', function(r) { this.results.push(r) }.bind(this))
+                    socket.on('done', (errors) => {
+                        this.file_status = "tests finished with " + errors + " failure(s)."
+                        socket.removeListener("status")
+                        socket.removeListener("result")
+                        socket.removeListener("done")
+                    })
                 }
             }
         })
