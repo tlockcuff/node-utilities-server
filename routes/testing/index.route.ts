@@ -1,13 +1,14 @@
 import { Request, Response } from "express"
 import Socket from "./IO"
-import { resolve } from "path"
+import { resolve, join } from "path"
 import * as multer from "multer"
 import * as v4 from "uuid/v4"
 import * as AdmZip from "adm-zip"
 import { spawn } from "child_process"
-import * as tmp from "tmp"
+import TempDir from "./TempDir"
+import { cleanDirectory } from "./util"
 
-let TEMP_DIR: string;
+let TEMP_DIR: TempDir
 
 const testUploader = multer({
     storage: multer.diskStorage({
@@ -35,20 +36,18 @@ export function post(req: Request, res: Response) {
 }
 
 export async function init() {
-    // make temporary tests folder
-    const tmpObj = tmp.dirSync({
-        dir: resolve('./temp')
-    })
-    TEMP_DIR = tmpObj.name
-    tmpObj.removeCallback()
-    console.log(`making test folder in ${TEMP_DIR}`)
+    const path = './temp/tests'
+    await cleanDirectory(path)
+    TEMP_DIR = new TempDir(path)
 }
 
 Socket.rooms.TestingSuite.on('connection', (socket) => {
     socket.on('test', async function ({ uuid }) {
         this.emit('status', 'extracting')
-        const path = resolve(`./temp/tests/${uuid}`)
+        const path = join(TEMP_DIR.path, uuid)
         const zip = new AdmZip(`${path}.zip`)
+        // todo: ADMZip can extract to memory instead of to the file directory
+        // todo: multer can also save posted files into memory. Look into a way to streamline this without reading from the file system.
         zip.extractAllToAsync(path, true, (err) => {
             this.emit('status', 'extracted')
             console.log(`spawning child process with '${path}'`)

@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon ./js/index.js",
+    "dev": "nodemon ./js/index.js --watch js",
     "test": "mocha \"./{,!(node_modules)/**/}*.spec.ts\" --require ts-node/register -O spec",
     "mocha": "mocha --reporter json-stream --require ts-node/register"
   },
