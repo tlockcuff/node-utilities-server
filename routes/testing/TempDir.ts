@@ -14,6 +14,7 @@ export default class {
      * @param path The path to create temporary folder directories in. Defaults to './tmp/'
      */
     constructor(public tmpPath: string = "./temp") {
+        this.tmpPath = resolve(this.tmpPath)
         this.directory = tmp.dirSync({
             dir: resolve(tmpPath),
             unsafeCleanup: true

@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import Socket from "./IO"
-import { resolve, join } from "path"
+import { resolve, join, basename } from "path"
+import { existsSync } from "fs"
 import * as multer from "multer"
 import * as v4 from "uuid/v4"
 import * as AdmZip from "adm-zip"
@@ -21,7 +22,7 @@ const testUploader = multer({
     }),
     fileFilter: (req, file, cb) => {
         let file_go_through = true
-        if (!/(zip)|(octect-stream)/.test(file.mimetype)) { file_go_through = false }
+        if (!/(zip)|(octet-stream)/.test(file.mimetype)) { file_go_through = false }
         cb((file_go_through) ? null : new Error("File must be a zip archive"), file_go_through)
     }
 }).single("tests")
@@ -33,6 +34,18 @@ export function post(req: Request, res: Response) {
     })
 }
 
+export function get(req: Request, res: Response) {
+    const { id, download } = req.query
+    if(id && download) {
+        const filepath = resolve(join(TEMP_DIR.tmpPath, `${id}.zip`))
+        if(existsSync(filepath)) {
+            res.download(filepath)
+        } else {
+            res.status(400).json({error: `Test archive ${id} does not exist.`})
+        }
+    }
+}
+
 export async function init() {
     const path = './temp/tests'
     await cleanDirectory(path)
@@ -41,8 +54,9 @@ export async function init() {
 
 Socket.rooms.TestingSuite.on('connection', (socket) => {
     socket.on('test', async function ({ uuid }) {
-        this.emit('status', 'extracting')
-        const zipPath =  join(TEMP_DIR.tmpPath, uuid)
+        this.emit('status', 'Extracting.')
+        const zipPath = join(TEMP_DIR.tmpPath, uuid)
+        if( !existsSync(zipPath) ) { this.emit('status', `Test ${uuid} does not exist.`) }
         const path = join(TEMP_DIR.path, uuid)
         console.log(`extracting to ${path}`)
         const zip = new AdmZip(`${zipPath}.zip`)
@@ -54,7 +68,7 @@ Socket.rooms.TestingSuite.on('connection', (socket) => {
             console.log(`tests are looking for ${path}/**/*.spec.{ts,js}`)
             const mocha_path = resolve('./node_modules/.bin/mocha.cmd')
             const spec_path = resolve(`${path}/**/*.spec.{ts,js}`)
-            this.emit('status', 'running tests. . .')
+            this.emit('status', 'Running tests. . .')
             const proc = spawn(mocha_path, ['--reporter', 'json-stream', '--require', 'ts-node/register', spec_path], { cwd: resolve('.') })
             proc.stderr.pipe(process.stderr)
             proc.stdout.setEncoding("utf-8")

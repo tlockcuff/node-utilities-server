@@ -17,6 +17,12 @@ app.use(bodyParser.json())
 
 let paths = []
 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*")
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+    next()
+})
+
 // assign all of the routes to express
 glob.sync('./js/routes/**/index.route.js').forEach(function(file){
     // extract the get, put, post, del and all functions exported from the module
@@ -40,6 +46,8 @@ glob.sync('./js/routes/**/index.route.js').forEach(function(file){
 app.use('/help', (req, res, next) => {
     res.json(paths)
 })
+
+
 
 const port = process.env.PORT || 3000;
 server.listen(port);
