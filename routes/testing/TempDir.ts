@@ -13,7 +13,7 @@ export default class {
     /**
      * @param path The path to create temporary folder directories in. Defaults to './tmp/'
      */
-    constructor(private tmpPath: string = "./temp") {
+    constructor(public tmpPath: string = "./temp") {
         this.directory = tmp.dirSync({
             dir: resolve(tmpPath),
             unsafeCleanup: true

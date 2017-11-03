@@ -38,48 +38,58 @@
                 uuid: null
             },
             methods: {
-                uploadFile: function(e) {
+
+                ditchListeners: function() {
+                    socket.removeListener("status")
+                    socket.removeListener("result")
+                    socket.removeListener("done")
+                },
+                uploadFile: function (e) {
                     e.preventDefault();
                     var formData = new FormData()
                     var file = e.target.zip.files[0]
                     formData.set('tests', file)
                     axios.post("http://localhost:3000/testing", formData)
-                        .then(function(res) {
-                            if(res.data.uuid) {
+                        .then(function (res) {
+                            if (res.data.uuid) {
                                 this.uuid = res.data.uuid
                                 this.status = "posted file, uuid: " + res.data.uuid
                                 this.readyToRun = true
-                                
-
-                                
-                            } else if(res.data.error) {
+                            } else if (res.data.error) {
                                 this.error = res.data.error
                             }
                         }.bind(this))
                 },
 
-                runTests: function() {
+                runTests: function () {
+                    this.ditchListeners()
                     this.results = []
                     socket.emit('test', { uuid: this.uuid })
-                    socket.on('status', function(status) {
+                    socket.on('status', function (status) {
                         this.file_status = status
                     }.bind(this))
-                    socket.on('result', function(r) { this.results.push(r) }.bind(this))
+                    socket.on('result', function (r) { this.results.push(r) }.bind(this))
                     socket.on('done', (errors) => {
                         this.file_status = "tests finished with " + errors + " failure(s)."
-                        socket.removeListener("status")
-                        socket.removeListener("result")
-                        socket.removeListener("done")
+                        this.ditchListeners()
                     })
                 }
             }
         })
-        
 
-        // socket.emit('test', { uuid: "sjdjwkakd" })
-
-        // socket.on('ready', function() {
-        // })
+        axios({
+            method: 'get',
+            url: "zip-tests.ashx",
+            responseType: 'blob'
+        })
+            .then(function (data) {
+                var frmData = new FormData();
+                var file = data.data;
+                frmData.set('tests', file);
+                axios.post("http://localhost:3000/testing", frmData)
+                    .then(function (res) {
+                    })
+            })
     </script>
 </body>
 </html>

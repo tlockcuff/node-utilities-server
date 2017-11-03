@@ -22,7 +22,6 @@ const testUploader = multer({
     fileFilter: (req, file, cb) => {
         let file_go_through = true
         if (!/(zip)|(octect-stream)/.test(file.mimetype)) { file_go_through = false }
-
         cb((file_go_through) ? null : new Error("File must be a zip archive"), file_go_through)
     }
 }).single("tests")
@@ -43,8 +42,10 @@ export async function init() {
 Socket.rooms.TestingSuite.on('connection', (socket) => {
     socket.on('test', async function ({ uuid }) {
         this.emit('status', 'extracting')
+        const zipPath =  join(TEMP_DIR.tmpPath, uuid)
         const path = join(TEMP_DIR.path, uuid)
-        const zip = new AdmZip(`${path}.zip`)
+        console.log(`extracting to ${path}`)
+        const zip = new AdmZip(`${zipPath}.zip`)
         // todo: ADMZip can extract to memory instead of to the file directory
         // todo: multer can also save posted files into memory. Look into a way to streamline this without reading from the file system.
         zip.extractAllToAsync(path, true, (err) => {
