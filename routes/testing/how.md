@@ -34,3 +34,29 @@ IO messages
     << "info" { uuid }
         requests info on a run test.
     >> "info" { UUID, LastRan: Date, Failed: Number, Results: JSON[] }
+
+
+# Posting to a server
+    Server gets and ID and a zipfile.
+    The server will store the zip and extract the zip to a folder, overwriting the entire folder
+    The server will return a READY signal.
+# Get info from server
+    Socket gets a 'testing' call with the project ID.
+    Server looks for the folder and zip file.
+        If it finds the folder:
+            it checks to find the meta.json inside and returns the data inside.
+            otherwise it sends back a READY signal.
+        Otherwise:
+            it returns a NO_DATA signal
+
+# Socket starts tests
+    Socket gets ID
+    Server checks to see if Folder exists with the ID
+        if not, it checks to see if the zip exists.
+            if not, it throws a NO_DATA signal
+        if so, the server runs the testing command
+        the server pipes the results to the socket stream
+        the server keeps a record of each pass and fail
+        at the end of the stream, the server stores the info in a meta.json contained in the project test folder.
+        Server returns a COMPLETED signal.
+            
